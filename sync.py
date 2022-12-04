@@ -1,3 +1,12 @@
+"""
+    sync.py - "i thought this is a solved problem already wtf" edition
+
+    i tried to use symlinks to sync the dots but git be like fuck you
+    so im like fuck you too symlinks and wrote this script out of spite
+"""
+__author__ = "FireRedz"
+
+
 import shutil
 from pathlib import Path
 
