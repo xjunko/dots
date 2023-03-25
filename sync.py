@@ -19,11 +19,13 @@ REPO: Path = Path.cwd()
 FILES_TO_SYNC: dict[Path, Path] = {
     # ~/
     HOME / ".zshrc": REPO / "root",
+    HOME / "Pictures" / "Pape" / "apply_pape.sh": REPO / "root",
     # .config/
     CONFIG / "bspwm" / "bspwmrc": REPO / "config" / "bspwm",
     CONFIG / "sxhkd" / "sxhkdrc": REPO / "config" / "sxhkd",
     CONFIG / "dunst" / "dunstrc": REPO / "config" / "dunst",
     CONFIG / "rofi": REPO / "config" / "rofi",
+    CONFIG / "polybar": REPO / "config" / "polybar"
 }
 
 
