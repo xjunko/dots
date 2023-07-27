@@ -1,51 +1,75 @@
-"""
-    sync.py - "i thought this is a solved problem already wtf" edition
+""" sync.py - copy dotfiles and then sanitize it a little bit """
 
-    i tried to use symlinks to sync the dots but git be like fuck you
-    so im like fuck you too symlinks and wrote this script out of spite
-"""
-__author__ = "FireRedz"
+__author__ = "xJunko"
+__github__ = "xJunko"
 
-
+import logging
 import shutil
 from pathlib import Path
 
-# Home
-HOME: Path = Path("/home/junko/")
-CONFIG: Path = HOME / ".config"
-REPO: Path = Path.cwd()
+# Global
+HOME = Path.home()
+CONFIG = HOME / ".config"
 
-# Files to sync
-FILES_TO_SYNC: dict[Path, Path] = {
-    # ~/
-    HOME / ".zshrc": REPO / "root",
-    HOME / "Pictures" / "Pape" / "apply_pape.sh": REPO / "root",
-    # .config/
-    CONFIG / "bspwm" / "bspwmrc": REPO / "config" / "bspwm",
-    CONFIG / "sxhkd" / "sxhkdrc": REPO / "config" / "sxhkd",
-    CONFIG / "dunst" / "dunstrc": REPO / "config" / "dunst",
-    CONFIG / "rofi": REPO / "config" / "rofi",
-    CONFIG / "polybar": REPO / "config" / "polybar"
-}
+# Local
+DOTS_LOCAL = Path.cwd() / "dots"
+CONFIG_LOCAL = Path.cwd() / "config"
+
+# Options
+DOTS_TO_COPY: list[str] = [".zshrc", "Pictures/Pape/apply_pape.sh"]
+CONFIG_TO_COPY: list[str] = ["bspwm", "sxhkd", "dunst", "rofi", "polybar"]
+
+
+# copy methods
+def copy_dots_to_local() -> int:
+    logging.info("Copying dotfiles.")
+
+    for dot_name in DOTS_TO_COPY:
+        if not (dot_file := HOME / dot_name).exists():
+            # Dotfiles are not that important.
+            logging.error(f"Dotfile {dot_name} didnt exist, not poggers, continuing.")
+            continue
+
+        target_file = DOTS_LOCAL / Path(dot_name)
+        target_file.parent.mkdir(exist_ok=True, parents=True)
+
+        shutil.copy(dot_file, target_file)
+
+    return 0
+
+
+def copy_config_to_local() -> int:
+    logging.info("Copying `.config` files.")
+
+    for folder_name in CONFIG_TO_COPY:
+        if not (folder := CONFIG / folder_name).exists():
+            logging.error(f"Folder {folder_name} not found, failed to sync!")
+            return 1
+
+        target_folder = CONFIG_LOCAL / folder_name
+
+        logging.info(f"Found folder {folder_name}, copying.")
+
+        shutil.copytree(folder, target_folder, dirs_exist_ok=True)
+
+    return 0
+
+
+def pre_init() -> None:
+    # loggin setup
+    logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
+
+    # folder setup
+    for required_folder in [DOTS_LOCAL, CONFIG_LOCAL]:
+        required_folder.mkdir(exist_ok=True, parents=True)
 
 
 def main() -> int:
-    # Delete for redudancy crap
-    for folder in ["config", "root"]:
-        shutil.rmtree(REPO / folder, ignore_errors=True)
+    pre_init()
 
-    for source, destination in FILES_TO_SYNC.items():
-        # File
-        if not source.is_dir():
-            destination.mkdir(exist_ok=True, parents=True)
-            shutil.copy(source, destination / source.name)
-
-        # Whole folder
-        if source.is_dir():
-            # destination.mkdir(exist_ok=True, parents=True)
-            shutil.copytree(source, destination)
-
-        print(f"Syncing: {source} -> {destination}")
+    for task in [copy_dots_to_local, copy_config_to_local]:
+        if ret_code := task():
+            return ret_code
 
     return 0
 
